@@ -1,0 +1,28 @@
+# ---- Backend ----
+fastapi
+uvicorn
+python-multipart
+pydantic
+
+# ---- ASR (Whisper Hybrid) ----
+faster-whisper
+torch
+numpy
+
+# ---- Gemini LLM ----
+google-genai
+
+# ---- Vector Search (RAG) ----
+faiss-cpu
+sentence-transformers
+
+# ---- Document Parsing ----
+pypdf
+python-docx
+
+# ---- UI ----
+streamlit
+
+# ---- Utilities ----
+tqdm
+python-dotenv

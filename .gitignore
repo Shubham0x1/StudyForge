@@ -1,0 +1,27 @@
+# Environment
+.env
+venv/
+.venv/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Uploads
+Data/uploads/*
+!Data/uploads/.gitkeep
+
+# Models (downloaded at runtime)
+*.bin
+*.onnx
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temp files
+tmp_*.wav
