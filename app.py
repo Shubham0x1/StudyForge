@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import uuid
 
-from asr_whisper import hybrid_transcribe
+from asr_gemini import transcribe_audio
 from llm_gemini import generate_notes_and_questions, chat_with_context
 from evaluation import evaluate_answers
 from rag import add_to_vector_store, retrieve_context
