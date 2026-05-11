@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import json
 
-API_URL = "http://127.0.0.1:8000"
+API_URL = "https://studyforge-tnlg.onrender.com"
 
 st.set_page_config(page_title="AI Classroom", page_icon="🎓", layout="wide")
 
@@ -201,7 +201,6 @@ else:
     with tab_chat:
         st.subheader("Ask anything about the lecture")
 
-        # Display chat history
         for msg in st.session_state.chat_history:
             if msg["role"] == "user":
                 with st.chat_message("user"):
