@@ -42,6 +42,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ---- Helper ----
+def safe_error(resp):
+    try:
+        return resp.json().get("detail", "Unknown error")
+    except Exception:
+        return f"Server error (status {resp.status_code}). The backend may be waking up — wait 30 seconds and try again."
+
 # ---- Session State ----
 if "lecture_id" not in st.session_state:
     st.session_state.lecture_id = None
@@ -70,7 +77,7 @@ with st.sidebar:
     )
 
     if uploaded_file and st.button("Process Lecture", type="primary", use_container_width=True):
-        with st.spinner("Processing... This may take a minute."):
+        with st.spinner("Processing... The server may take 30-60s to wake up on first request."):
             files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
             try:
                 resp = requests.post(f"{API_URL}/upload-lecture", files=files, timeout=300)
@@ -82,24 +89,26 @@ with st.sidebar:
                     st.session_state.chat_history = []
 
                     # Fetch notes
-                    notes_resp = requests.get(f"{API_URL}/get-notes/{data['lecture_id']}")
+                    notes_resp = requests.get(f"{API_URL}/get-notes/{data['lecture_id']}", timeout=30)
                     if notes_resp.status_code == 200:
                         st.session_state.notes = notes_resp.json()["notes"]
 
                     # Fetch questions
-                    q_resp = requests.get(f"{API_URL}/get-questions/{data['lecture_id']}")
+                    q_resp = requests.get(f"{API_URL}/get-questions/{data['lecture_id']}", timeout=30)
                     if q_resp.status_code == 200:
                         st.session_state.questions = q_resp.json()["questions"]
 
                     st.success(f"Lecture processed! {data['total_questions']} questions generated.")
                 else:
-                    st.error(f"Error: {resp.json().get('detail', 'Unknown error')}")
+                    st.error(safe_error(resp))
             except requests.exceptions.ConnectionError:
-                st.error("Cannot connect to API server. Make sure it's running on port 8000.")
+                st.error("Cannot connect to backend. Wait 30 seconds and try again.")
+            except requests.exceptions.Timeout:
+                st.error("Request timed out. The server may be overloaded — please try again.")
 
     if st.session_state.lecture_id:
         st.divider()
-        st.success(f"Active Lecture")
+        st.success("Active Lecture")
         st.code(st.session_state.lecture_id[:8] + "...", language=None)
 
 # ---- Main Area: Tabs ----
@@ -185,17 +194,22 @@ else:
 
                 if submitted:
                     with st.spinner("Evaluating..."):
-                        resp = requests.post(
-                            f"{API_URL}/submit-answers/{st.session_state.lecture_id}",
-                            json={"answers": answers},
-                            timeout=60
-                        )
-                        if resp.status_code == 200:
-                            st.session_state.quiz_result = resp.json()
-                            st.session_state.quiz_submitted = True
-                            st.rerun()
-                        else:
-                            st.error(f"Error: {resp.json().get('detail', 'Unknown error')}")
+                        try:
+                            resp = requests.post(
+                                f"{API_URL}/submit-answers/{st.session_state.lecture_id}",
+                                json={"answers": answers},
+                                timeout=60
+                            )
+                            if resp.status_code == 200:
+                                st.session_state.quiz_result = resp.json()
+                                st.session_state.quiz_submitted = True
+                                st.rerun()
+                            else:
+                                st.error(safe_error(resp))
+                        except requests.exceptions.ConnectionError:
+                            st.error("Cannot connect to backend. Try again.")
+                        except requests.exceptions.Timeout:
+                            st.error("Request timed out. Try again.")
 
     # ---- Tab 3: Chat with AI ----
     with tab_chat:
@@ -226,9 +240,11 @@ else:
                         if resp.status_code == 200:
                             answer = resp.json()["answer"]
                         else:
-                            answer = f"Error: {resp.json().get('detail', 'Unknown error')}"
+                            answer = f"Error: {safe_error(resp)}"
                     except requests.exceptions.ConnectionError:
-                        answer = "Cannot connect to API server."
+                        answer = "Cannot connect to backend. Try again."
+                    except requests.exceptions.Timeout:
+                        answer = "Request timed out. Try again."
 
                 st.write(answer)
                 st.session_state.chat_history.append({"role": "assistant", "content": answer})
@@ -236,7 +252,7 @@ else:
     # ---- Tab 4: Analytics ----
     with tab_analytics:
         try:
-            resp = requests.get(f"{API_URL}/analytics/{st.session_state.lecture_id}", timeout=10)
+            resp = requests.get(f"{API_URL}/analytics/{st.session_state.lecture_id}", timeout=30)
             if resp.status_code == 200:
                 data = resp.json()
 
@@ -277,6 +293,8 @@ else:
             elif resp.status_code == 404:
                 st.info("No submissions yet. Take the quiz first!")
             else:
-                st.error(f"Error: {resp.json().get('detail', 'Unknown error')}")
+                st.error(safe_error(resp))
         except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to API server.")
+            st.error("Cannot connect to backend.")
+        except requests.exceptions.Timeout:
+            st.error("Request timed out. Try again.")
