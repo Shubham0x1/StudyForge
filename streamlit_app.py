@@ -128,6 +128,35 @@ else:
 
     # ---- Tab 2: Quiz ----
     with tab_quiz:
+
+        # Regenerate button always visible at top
+        col_r1, col_r2 = st.columns([3, 1])
+        with col_r2:
+            if st.button("🔄 Regenerate Quiz", use_container_width=True):
+                with st.spinner("Generating new questions..."):
+                    try:
+                        resp = requests.post(
+                            f"{API_URL}/regenerate-questions/{st.session_state.lecture_id}",
+                            timeout=90
+                        )
+                        if resp.status_code == 200:
+                            q_resp = requests.get(
+                                f"{API_URL}/get-questions/{st.session_state.lecture_id}",
+                                timeout=30
+                            )
+                            if q_resp.status_code == 200:
+                                st.session_state.questions = q_resp.json()["questions"]
+                                st.session_state.quiz_submitted = False
+                                st.session_state.quiz_result = None
+                                st.success("New questions generated!")
+                                st.rerun()
+                        else:
+                            st.error(safe_error(resp))
+                    except requests.exceptions.ConnectionError:
+                        st.error("Cannot connect to backend. Try again.")
+                    except requests.exceptions.Timeout:
+                        st.error("Request timed out. Try again.")
+
         if not st.session_state.questions:
             st.warning("No questions available.")
         elif st.session_state.quiz_submitted and st.session_state.quiz_result:
@@ -183,11 +212,11 @@ else:
                     st.markdown(f"**Q{i+1}. {q['question']}**")
                     choice = st.radio(
                         f"Select answer for Q{i+1}:",
-                        options=q["options"],
+                        options=["— Select an answer —"] + q["options"],
                         key=f"q_{i}",
                         label_visibility="collapsed"
                     )
-                    answers[str(q["id"])] = choice
+                    answers[str(q["id"])] = "" if choice == "— Select an answer —" else choice
                     st.session_state[f"ans_{i}"] = choice
 
                 submitted = st.form_submit_button("Submit Answers", type="primary", use_container_width=True)
