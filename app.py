@@ -42,6 +42,7 @@ def root():
             "POST /submit-answers/{lecture_id}",
             "POST /chat/{lecture_id}",
             "GET  /analytics/{lecture_id}",
+            "POST /regenerate-questions/{lecture_id}",
         ]
     }
 
@@ -52,7 +53,6 @@ def root():
 
 @app.post("/upload-lecture")
 async def upload_lecture(file: UploadFile = File(...)):
-    # Validate file extension
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -60,7 +60,6 @@ async def upload_lecture(file: UploadFile = File(...)):
             detail=f"Unsupported file format '{ext}'. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
         )
 
-    # Validate file size
     contents = await file.read()
     if len(contents) > MAX_FILE_SIZE:
         raise HTTPException(
@@ -147,7 +146,6 @@ async def submit_answers(lecture_id: str, payload: dict):
         user_answers,
     )
 
-    # Append to list so multiple submissions are tracked
     RESPONSES.setdefault(lecture_id, []).append(result)
 
     return result
@@ -164,7 +162,6 @@ def analytics(lecture_id: str):
 
     submissions = RESPONSES[lecture_id]
 
-    # Aggregate across all submissions
     all_results = []
     for submission in submissions:
         all_results.extend(submission["question_results"])
@@ -222,3 +219,25 @@ async def chat(lecture_id: str, payload: dict):
         raise HTTPException(status_code=500, detail=f"Chat failed: {e}")
 
     return {"answer": answer}
+
+
+# ----------------------------
+# 7. Regenerate Questions
+# ----------------------------
+
+@app.post("/regenerate-questions/{lecture_id}")
+async def regenerate_questions(lecture_id: str):
+    if lecture_id not in LECTURES:
+        raise HTTPException(status_code=404, detail="Lecture not found")
+
+    try:
+        notes, questions = generate_notes_and_questions(LECTURES[lecture_id]["transcript"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Regeneration failed: {e}")
+
+    QUESTIONS[lecture_id] = questions
+
+    return {
+        "message": "Questions regenerated successfully",
+        "total_questions": len(questions)
+    }
