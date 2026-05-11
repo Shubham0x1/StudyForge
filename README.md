@@ -8,7 +8,7 @@ An AI-powered learning platform that transforms lecture audio and PDFs into stru
 
 | App | URL |
 |---|---|
-| 🎓 Frontend (Streamlit UI) | [studyforge.streamlit.app](https://studyforge.streamlit.app) |
+| 🎓 Frontend (Streamlit UI) | [studyforge.streamlit.app](https://studyforge-6cj2vrwgevxjjgju8ifs8c.streamlit.app/) |
 | ⚙️ Backend API | [studyforge-tnlg.onrender.com](https://studyforge-tnlg.onrender.com) |
 | 📖 API Docs | [studyforge-tnlg.onrender.com/docs](https://studyforge-tnlg.onrender.com/docs) |
 
