@@ -7,7 +7,11 @@ def evaluate_answers(questions, user_answers):
         user_answer = user_answers.get(qid, "").strip().lower()
         correct = q["correct"].strip().lower()
 
-        is_correct = (user_answer == correct) or (user_answer in correct) or (correct in user_answer)
+        # Empty answer (skipped) is always wrong
+        if not user_answer:
+            is_correct = False
+        else:
+            is_correct = (user_answer == correct) or (user_answer in correct) or (correct in user_answer)
 
         if is_correct:
             score += 1
