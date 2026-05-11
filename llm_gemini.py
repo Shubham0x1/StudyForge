@@ -6,19 +6,20 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+
 def generate_notes_and_questions(transcript: str):
     prompt = f"""
 You are an AI teaching assistant.
 
 From the following lecture transcript:
-1. Create structured notes
+1. Create well-formatted, human-readable study notes in markdown format with headings, bullet points, and sections
 2. Create 10 MCQs
 
 Each MCQ must include:
 - id
 - question
-- 4 options
-- correct
+- 4 options (as a list of strings)
+- correct (the exact correct option string)
 - topic
 
 Transcript:
@@ -26,9 +27,15 @@ Transcript:
 
 Return strictly in JSON:
 {{
-  "notes": "...",
+  "notes": "## Topic Title\\n\\n### Key Points\\n- Point 1\\n- Point 2\\n\\n### Summary\\n...",
   "questions": [ ... ]
 }}
+
+IMPORTANT:
+- The notes field must be a clean markdown string with proper headings (##, ###) and bullet points (-)
+- Do NOT return raw data, JSON, or Python dicts inside the notes field
+- Write notes as a human teacher would write for a student — clear, organized, easy to read
+- Cover all important topics from the transcript in the notes
 """
 
     try:
