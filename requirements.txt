@@ -4,12 +4,7 @@ uvicorn
 python-multipart
 pydantic
 
-# ---- ASR (Whisper Hybrid) ----
-faster-whisper
-torch
-numpy
-
-# ---- Gemini LLM ----
+# ---- Gemini LLM & ASR ----
 google-genai
 
 # ---- Vector Search (RAG) ----
@@ -20,9 +15,7 @@ sentence-transformers
 pypdf
 python-docx
 
-# ---- UI ----
-streamlit
-
 # ---- Utilities ----
+numpy
 tqdm
 python-dotenv
