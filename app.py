@@ -79,7 +79,12 @@ async def upload_lecture(file: UploadFile = File(...)):
         if ext == ".pdf":
             transcript = extract_text_from_pdf(contents)
         else:
-            transcript = hybrid_transcribe(path)
+            content_type_map = {
+                ".mp3": "audio/mpeg",
+                ".wav": "audio/wav",
+                ".m4a": "audio/mp4"
+            }
+            transcript = transcribe_audio(contents, content_type_map[ext])
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
 
